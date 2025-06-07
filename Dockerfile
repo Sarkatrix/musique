@@ -1,11 +1,14 @@
-FROM python:3.11-slim
+FROM python:3.10-slim
 
-# Installer ffmpeg
-RUN apt-get update && apt-get install -y ffmpeg && apt-get clean
-
+# Crée le répertoire de travail
 WORKDIR /app
-COPY . /app
 
+# Copie les dépendances et les installe
+COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Copie le reste du code
+COPY . .
+
+# Commande de démarrage du bot
 CMD ["python", "bot.py"]
