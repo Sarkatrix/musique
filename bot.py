@@ -12,9 +12,7 @@ intents.guilds = True
 
 bot = commands.Bot(command_prefix="!", intents=intents)
 
-FFMPEG_OPTIONS = {
-    'options': '-vn'
-}
+FFMPEG_OPTIONS = {'options': '-vn'}
 YTDL_OPTIONS = {
     'format': 'bestaudio/best',
     'noplaylist': True,
@@ -24,7 +22,7 @@ YTDL_OPTIONS = {
 
 ytdl = yt_dlp.YoutubeDL(YTDL_OPTIONS)
 
-# --- Contrôles musique (boutons) ---
+# === Boutons de contrôle musique ===
 class MusicControls(discord.ui.View):
     def __init__(self, voice_client: discord.VoiceClient):
         super().__init__(timeout=None)
@@ -105,6 +103,9 @@ async def play(interaction: discord.Interaction, query: str):
             await interaction.followup.send("❌ Tu dois être dans un salon vocal !")
             return
 
+    if not query.startswith("http"):
+        query = f"ytsearch1:{query}"
+
     try:
         info = ytdl.extract_info(query, download=False)
         print(f"[DEBUG] Info extraite : {info}")
@@ -150,3 +151,4 @@ if __name__ == "__main__":
         print("❌ Variable DISCORD_TOKEN manquante.")
     else:
         bot.run(TOKEN)
+
