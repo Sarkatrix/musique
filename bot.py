@@ -12,7 +12,9 @@ intents.guilds = True
 
 bot = commands.Bot(command_prefix="!", intents=intents)
 
-FFMPEG_OPTIONS = {'options': '-vn'}
+FFMPEG_OPTIONS = {
+    'options': '-vn'
+}
 YTDL_OPTIONS = {
     'format': 'bestaudio/best',
     'noplaylist': True,
@@ -22,7 +24,7 @@ YTDL_OPTIONS = {
 
 ytdl = yt_dlp.YoutubeDL(YTDL_OPTIONS)
 
-# === Boutons de contrôle musique ===
+# --- Contrôles musique (boutons) ---
 class MusicControls(discord.ui.View):
     def __init__(self, voice_client: discord.VoiceClient):
         super().__init__(timeout=None)
@@ -103,17 +105,23 @@ async def play(interaction: discord.Interaction, query: str):
             await interaction.followup.send("❌ Tu dois être dans un salon vocal !")
             return
 
-    if not query.startswith("http"):
-        query = f"ytsearch1:{query}"
-
     try:
         info = ytdl.extract_info(query, download=False)
         print(f"[DEBUG] Info extraite : {info}")
-        url = info['url'] if 'url' in info else info['entries'][0]['url']
-        title = info['title'] if 'title' in info else info['entries'][0]['title']
+
+        # Si c’est une liste de résultats (ytsearch)
+        if "entries" in info:
+            info = next((entry for entry in info["entries"] if entry and "url" in entry), None)
+
+        if not info or "url" not in info:
+            raise Exception("Aucune musique exploitable trouvée.")
+
+        url = info["url"]
+        title = info.get("title", "Titre inconnu")
+
     except Exception as e:
         print(f"[ERREUR yt-dlp] {e}")
-        await interaction.followup.send(f"Erreur lors de la recherche : {str(e)}")
+        await interaction.followup.send("❌ Aucune musique valide trouvée. Essaie un autre lien ou mot-clé.")
         return
 
     try:
@@ -121,7 +129,7 @@ async def play(interaction: discord.Interaction, query: str):
         print("[DEBUG] Source audio chargée")
     except Exception as e:
         print(f"[ERREUR FFmpeg] {e}")
-        await interaction.followup.send(f"Erreur lors de la lecture audio : {str(e)}")
+        await interaction.followup.send("❌ Impossible de lire cette source audio.")
         return
 
     voice_client.stop()
