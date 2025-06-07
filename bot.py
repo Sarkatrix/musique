@@ -12,9 +12,7 @@ intents.guilds = True
 
 bot = commands.Bot(command_prefix="!", intents=intents)
 
-FFMPEG_OPTIONS = {
-    'options': '-vn'
-}
+FFMPEG_OPTIONS = {'options': '-vn'}
 YTDL_OPTIONS = {
     'format': 'bestaudio/best',
     'noplaylist': True,
@@ -24,7 +22,6 @@ YTDL_OPTIONS = {
 
 ytdl = yt_dlp.YoutubeDL(YTDL_OPTIONS)
 
-# --- Contrôles musique (boutons) ---
 class MusicControls(discord.ui.View):
     def __init__(self, voice_client: discord.VoiceClient):
         super().__init__(timeout=None)
@@ -65,7 +62,6 @@ class MusicControls(discord.ui.View):
         button.label = f"🔁 Loop: {'ON' if self.looping else 'OFF'}"
         await interaction.response.edit_message(view=self)
 
-
 @bot.event
 async def on_ready():
     print(f"✅ Connecté en tant que {bot.user}")
@@ -74,7 +70,6 @@ async def on_ready():
         print(f"🔧 Slash commands synchronisées ({len(synced)})")
     except Exception as e:
         print(f"Erreur lors de la sync : {e}")
-
 
 @bot.tree.command(name="join", description="Fait rejoindre le salon vocal")
 async def join(interaction: discord.Interaction):
@@ -88,7 +83,6 @@ async def join(interaction: discord.Interaction):
         await interaction.response.send_message(f"🔊 Je t’ai rejoint dans **{channel.name}** !", ephemeral=True)
     except Exception as e:
         await interaction.response.send_message(f"❌ Erreur en rejoignant le vocal : {e}", ephemeral=True)
-
 
 @bot.tree.command(name="play", description="Joue une musique à partir d’un lien ou d’un mot-clé")
 @app_commands.describe(query="Lien YouTube ou mot-clé")
@@ -105,11 +99,13 @@ async def play(interaction: discord.Interaction, query: str):
             await interaction.followup.send("❌ Tu dois être dans un salon vocal !")
             return
 
+    if not query.startswith("http"):
+        query = f"ytsearch1:{query}"
+
     try:
         info = ytdl.extract_info(query, download=False)
         print(f"[DEBUG] Info extraite : {info}")
 
-        # Si c’est une liste de résultats (ytsearch)
         if "entries" in info:
             info = next((entry for entry in info["entries"] if entry and "url" in entry), None)
 
@@ -152,11 +148,9 @@ async def play(interaction: discord.Interaction, query: str):
         view=view
     )
 
-
 if __name__ == "__main__":
     TOKEN = os.getenv("DISCORD_TOKEN")
     if TOKEN is None:
         print("❌ Variable DISCORD_TOKEN manquante.")
     else:
         bot.run(TOKEN)
-
